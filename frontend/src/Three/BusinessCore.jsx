@@ -2,30 +2,83 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Text } from "@react-three/drei";
 import { useRef } from "react";
 import * as THREE from "three";
+import Particles from "./Particles";
 
 const Core = () => {
     const coreRef = useRef();
+    const ringRef = useRef();
+    const ringRef2 = useRef();
 
     useFrame((state, delta) => {
         if (!coreRef.current) return;
+
+        const time = state.clock.elapsedTime;
 
         coreRef.current.rotation.x += delta * 0.15;
         coreRef.current.rotation.y += delta * 0.25;
 
         coreRef.current.position.y =
-            Math.sin(state.clock.elapsedTime * 1.2) * 0.08;
+            Math.sin(time * 1.2) * 0.08;
+
+        if (ringRef.current) {
+            ringRef.current.rotation.x += delta * 0.35;
+            ringRef.current.rotation.y += delta * 0.2;
+        }
+
+        if (ringRef2.current) {
+            ringRef2.current.rotation.x -= delta * 0.25;
+            ringRef2.current.rotation.z += delta * 0.3;
+        }
     });
 
     return (
-        <mesh ref={coreRef}>
-            <icosahedronGeometry args={[1.2, 2]} />
-            <meshStandardMaterial
-                color="#38bdf8"
-                wireframe
-                transparent
-                opacity={0.8}
-            />
-        </mesh>
+        <group ref={coreRef}>
+            <mesh>
+                <icosahedronGeometry args={[1.05, 2]} />
+
+                <meshStandardMaterial
+                    color="#0ea5e9"
+                    emissive="#0284c7"
+                    emissiveIntensity={1.5}
+                    transparent
+                    opacity={0.35}
+                />
+            </mesh>
+
+            <mesh>
+                <icosahedronGeometry args={[1.2, 2]} />
+
+                <meshStandardMaterial
+                    color="#38bdf8"
+                    wireframe
+                    transparent
+                    opacity={0.75}
+                />
+            </mesh>
+
+            <mesh ref={ringRef}>
+                <torusGeometry args={[1.55, 0.025, 16, 100]} />
+
+                <meshBasicMaterial
+                    color="#38bdf8"
+                    transparent
+                    opacity={0.7}
+                />
+            </mesh>
+
+            <mesh
+                ref={ringRef2}
+                rotation={[Math.PI / 2, 0, 0]}
+            >
+                <torusGeometry args={[1.75, 0.015, 16, 100]} />
+
+                <meshBasicMaterial
+                    color="#7dd3fc"
+                    transparent
+                    opacity={0.45}
+                />
+            </mesh>
+        </group>
     );
 };
 
@@ -47,6 +100,7 @@ const Node = ({ position, label }) => {
         <group ref={ref} position={position}>
             <mesh>
                 <sphereGeometry args={[0.22, 24, 24]} />
+
                 <meshStandardMaterial
                     color="#ffffff"
                     emissive="#38bdf8"
@@ -68,22 +122,63 @@ const Node = ({ position, label }) => {
 };
 
 const Connection = ({ start, end }) => {
-    const points = [
-        new THREE.Vector3(...start),
-        new THREE.Vector3(...end)
-    ];
+    const ref = useRef();
 
-    const geometry =
-        new THREE.BufferGeometry().setFromPoints(points);
+    const startVector = new THREE.Vector3(...start);
+    const endVector = new THREE.Vector3(...end);
+
+    const direction = new THREE.Vector3()
+        .subVectors(endVector, startVector);
+
+    useFrame((state) => {
+        if (!ref.current) return;
+
+        const time =
+            (state.clock.elapsedTime * 0.4) % 1;
+
+        ref.current.position.x =
+            startVector.x +
+            direction.x * time;
+
+        ref.current.position.y =
+            startVector.y +
+            direction.y * time;
+
+        ref.current.position.z =
+            startVector.z +
+            direction.z * time;
+    });
 
     return (
-        <line geometry={geometry}>
-            <lineBasicMaterial
-                color="#38bdf8"
-                transparent
-                opacity={0.35}
-            />
-        </line>
+        <group>
+            <line>
+                <bufferGeometry
+                    attach="geometry"
+                    onUpdate={(geometry) => {
+                        geometry.setFromPoints([
+                            startVector,
+                            endVector
+                        ]);
+                    }}
+                />
+
+                <lineBasicMaterial
+                    color="#38bdf8"
+                    transparent
+                    opacity={0.25}
+                />
+            </line>
+
+            <mesh ref={ref}>
+                <sphereGeometry
+                    args={[0.055, 12, 12]}
+                />
+
+                <meshBasicMaterial
+                    color="#7dd3fc"
+                />
+            </mesh>
+        </group>
     );
 };
 
@@ -149,13 +244,15 @@ const BusinessScene = () => {
 
 const BusinessCore = () => {
     return (
-        <div className="w-full h-[420px]">
+        <div className="h-[500px] w-full">
             <Canvas
                 camera={{
                     position: [0, 0, 6],
                     fov: 45
                 }}
             >
+                <Particles />
+
                 <BusinessScene />
 
                 <OrbitControls
