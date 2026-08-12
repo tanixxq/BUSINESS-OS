@@ -1,10 +1,10 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls, Text } from "@react-three/drei";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import Particles from "./Particles";
 
-const Core = () => {
+const Core = ({ activeNode }) => {
     const coreRef = useRef();
     const ringRef = useRef();
     const ringRef2 = useRef();
@@ -16,50 +16,67 @@ const Core = () => {
         if (!coreRef.current) return;
 
         const time = state.clock.elapsedTime;
+        const intensity = activeNode ? 1.4 : 1;
 
-        coreRef.current.rotation.x += delta * 0.12;
-        coreRef.current.rotation.y += delta * 0.22;
+        coreRef.current.rotation.x += delta * 0.12 * intensity;
+        coreRef.current.rotation.y += delta * 0.22 * intensity;
         coreRef.current.position.y = Math.sin(time * 1.2) * 0.08;
 
         if (innerRef.current) {
-            const pulse = 1 + Math.sin(time * 3) * 0.04;
-            innerRef.current.scale.set(pulse, pulse, pulse);
+            const pulse =
+                1 +
+                Math.sin(time * (activeNode ? 5 : 3)) *
+                    (activeNode ? 0.08 : 0.04);
+
+            innerRef.current.scale.set(
+                pulse,
+                pulse,
+                pulse
+            );
         }
 
         if (ringRef.current) {
-            ringRef.current.rotation.x += delta * 0.35;
-            ringRef.current.rotation.y += delta * 0.2;
+            ringRef.current.rotation.x +=
+                delta * 0.35 * intensity;
+            ringRef.current.rotation.y +=
+                delta * 0.2 * intensity;
         }
 
         if (ringRef2.current) {
-            ringRef2.current.rotation.x -= delta * 0.25;
-            ringRef2.current.rotation.z += delta * 0.3;
+            ringRef2.current.rotation.x -=
+                delta * 0.25 * intensity;
+            ringRef2.current.rotation.z +=
+                delta * 0.3 * intensity;
         }
 
         if (ringRef3.current) {
-            ringRef3.current.rotation.y += delta * 0.5;
-            ringRef3.current.rotation.z -= delta * 0.2;
+            ringRef3.current.rotation.y +=
+                delta * 0.5 * intensity;
+            ringRef3.current.rotation.z -=
+                delta * 0.2 * intensity;
         }
 
         if (shardRef.current) {
-            shardRef.current.rotation.x += delta * 0.7;
-            shardRef.current.rotation.y -= delta * 0.45;
+            shardRef.current.rotation.x +=
+                delta * 0.7 * intensity;
+            shardRef.current.rotation.y -=
+                delta * 0.45 * intensity;
         }
     });
 
     return (
         <group ref={coreRef}>
             <mesh ref={innerRef}>
-                <sphereGeometry args={[0.65, 32, 32]} />
+            <sphereGeometry args={[0.95, 32, 32]} />
                 <meshBasicMaterial
                     color="#38bdf8"
                     transparent
-                    opacity={0.22}
+                    opacity={activeNode ? 0.35 : 0.22}
                 />
             </mesh>
 
             <mesh>
-                <icosahedronGeometry args={[0.85, 2]} />
+            <icosahedronGeometry args={[1.15, 2]} />
                 <meshBasicMaterial
                     color="#7dd3fc"
                     wireframe
@@ -69,18 +86,20 @@ const Core = () => {
             </mesh>
 
             <mesh>
-                <icosahedronGeometry args={[1.05, 2]} />
+                <icosahedronGeometry args={[1.35, 2]} />
                 <meshStandardMaterial
                     color="#0ea5e9"
                     emissive="#0284c7"
-                    emissiveIntensity={1.8}
+                    emissiveIntensity={
+                        activeNode ? 3 : 1.8
+                    }
                     transparent
                     opacity={0.3}
                 />
             </mesh>
 
             <mesh>
-                <icosahedronGeometry args={[1.2, 2]} />
+                <icosahedronGeometry args={[1.25, 2]} />
                 <meshBasicMaterial
                     color="#38bdf8"
                     wireframe
@@ -90,7 +109,9 @@ const Core = () => {
             </mesh>
 
             <mesh ref={ringRef}>
-                <torusGeometry args={[1.55, 0.025, 16, 100]} />
+                <torusGeometry
+                    args={[2.1, 0.01, 12, 100]}
+                />
                 <meshBasicMaterial
                     color="#38bdf8"
                     transparent
@@ -98,8 +119,13 @@ const Core = () => {
                 />
             </mesh>
 
-            <mesh ref={ringRef2} rotation={[Math.PI / 2, 0, 0]}>
-                <torusGeometry args={[1.75, 0.015, 16, 100]} />
+            <mesh
+                ref={ringRef2}
+                rotation={[Math.PI / 2, 0, 0]}
+            >
+                <torusGeometry
+                   args={[1.75, 0.025, 16, 100]}
+                />
                 <meshBasicMaterial
                     color="#7dd3fc"
                     transparent
@@ -109,9 +135,15 @@ const Core = () => {
 
             <mesh
                 ref={ringRef3}
-                rotation={[Math.PI / 3, Math.PI / 5, 0]}
+                rotation={[
+                    Math.PI / 3,
+                    Math.PI / 5,
+                    0
+                ]}
             >
-                <torusGeometry args={[1.9, 0.01, 12, 100]} />
+                <torusGeometry
+                    args={[1.95, 0.015, 16, 100]}
+                />
                 <meshBasicMaterial
                     color="#0ea5e9"
                     transparent
@@ -144,7 +176,14 @@ const Core = () => {
     );
 };
 
-const Node = ({ position, label, value }) => {
+const Node = ({
+    position,
+    label,
+    value,
+    id,
+    activeNode,
+    setActiveNode
+}) => {
     const ref = useRef();
     const meshRef = useRef();
     const [hovered, setHovered] = useState(false);
@@ -153,7 +192,8 @@ const Node = ({ position, label, value }) => {
         if (!ref.current || !meshRef.current) return;
 
         const time = state.clock.elapsedTime;
-        const targetScale = hovered ? 1.35 : 1;
+        const isActive = activeNode === id;
+        const targetScale = isActive ? 1.45 : 1;
 
         meshRef.current.scale.lerp(
             new THREE.Vector3(
@@ -167,10 +207,12 @@ const Node = ({ position, label, value }) => {
         ref.current.position.y =
             position[1] +
             Math.sin(
-                time * 1.5 +
-                position[0]
-            ) * 0.08;
+                time * 1.5 + position[0]
+            ) *
+                0.08;
     });
+
+    const isActive = activeNode === id;
 
     return (
         <group ref={ref} position={position}>
@@ -179,24 +221,30 @@ const Node = ({ position, label, value }) => {
                 onPointerOver={(event) => {
                     event.stopPropagation();
                     setHovered(true);
-                    document.body.style.cursor = "pointer";
+                    setActiveNode(id);
+                    document.body.style.cursor =
+                        "pointer";
                 }}
                 onPointerOut={() => {
                     setHovered(false);
-                    document.body.style.cursor = "default";
+                    setActiveNode(null);
+                    document.body.style.cursor =
+                        "default";
                 }}
             >
-                <sphereGeometry args={[0.22, 32, 32]} />
+                <sphereGeometry
+                    args={[0.22, 32, 32]}
+                />
 
                 <meshStandardMaterial
                     color={
-                        hovered
+                        isActive
                             ? "#7dd3fc"
                             : "#ffffff"
                     }
                     emissive="#38bdf8"
                     emissiveIntensity={
-                        hovered ? 5 : 2
+                        isActive ? 6 : 2
                     }
                 />
             </mesh>
@@ -211,7 +259,7 @@ const Node = ({ position, label, value }) => {
                 {label}
             </Text>
 
-            {hovered && (
+            {(hovered || isActive) && (
                 <Text
                     position={[0, 0.55, 0]}
                     fontSize={0.16}
@@ -226,37 +274,79 @@ const Node = ({ position, label, value }) => {
     );
 };
 
-const Connection = ({ start, end }) => {
-    const ref = useRef();
+const Connection = ({
+    start,
+    end,
+    active = false
+}) => {
+    const pulse1Ref = useRef();
+    const pulse2Ref = useRef();
+    const lineRef = useRef();
 
-    const startVector = new THREE.Vector3(...start);
-    const endVector = new THREE.Vector3(...end);
+    const startVector = useMemo(
+        () => new THREE.Vector3(...start),
+        [start]
+    );
 
-    const direction = new THREE.Vector3()
-        .subVectors(endVector, startVector);
+    const endVector = useMemo(
+        () => new THREE.Vector3(...end),
+        [end]
+    );
+
+    const direction = useMemo(
+        () =>
+            new THREE.Vector3().subVectors(
+                endVector,
+                startVector
+            ),
+        [startVector, endVector]
+    );
 
     useFrame((state) => {
-        if (!ref.current) return;
+        const time = state.clock.elapsedTime;
 
-        const time =
-            (state.clock.elapsedTime * 0.4) % 1;
+        if (pulse1Ref.current) {
+            const progress =
+                (time * (active ? 0.65 : 0.4)) % 1;
 
-        ref.current.position.x =
-            startVector.x +
-            direction.x * time;
+            pulse1Ref.current.position
+                .copy(startVector)
+                .add(
+                    direction
+                        .clone()
+                        .multiplyScalar(progress)
+                );
+        }
 
-        ref.current.position.y =
-            startVector.y +
-            direction.y * time;
+        if (pulse2Ref.current) {
+            const progress =
+                (time * (active ? 0.65 : 0.4) +
+                    0.5) %
+                1;
 
-        ref.current.position.z =
-            startVector.z +
-            direction.z * time;
+            pulse2Ref.current.position
+                .copy(startVector)
+                .add(
+                    direction
+                        .clone()
+                        .multiplyScalar(progress)
+                );
+        }
+
+        if (lineRef.current) {
+            const pulse =
+                (Math.sin(time * 3) + 1) / 2;
+
+            lineRef.current.material.opacity =
+                active
+                    ? 0.45 + pulse * 0.3
+                    : 0.15 + pulse * 0.08;
+        }
     });
 
     return (
         <group>
-            <line>
+            <line ref={lineRef}>
                 <bufferGeometry
                     attach="geometry"
                     onUpdate={(geometry) => {
@@ -268,26 +358,56 @@ const Connection = ({ start, end }) => {
                 />
 
                 <lineBasicMaterial
-                    color="#38bdf8"
+                    color={
+                        active
+                            ? "#7dd3fc"
+                            : "#38bdf8"
+                    }
                     transparent
-                    opacity={0.25}
+                    opacity={0.2}
                 />
             </line>
 
-            <mesh ref={ref}>
+            <mesh ref={pulse1Ref}>
                 <sphereGeometry
-                    args={[0.055, 12, 12]}
+                    args={[active ? 0.07 : 0.055, 12, 12]}
                 />
 
                 <meshBasicMaterial
-                    color="#7dd3fc"
+                    color={
+                        active
+                            ? "#ffffff"
+                            : "#7dd3fc"
+                    }
+                />
+            </mesh>
+
+            <mesh ref={pulse2Ref}>
+                <sphereGeometry
+                    args={[0.035, 10, 10]}
+                />
+
+                <meshBasicMaterial
+                    color="#38bdf8"
                 />
             </mesh>
         </group>
     );
 };
 
-const BusinessScene = () => {
+
+
+const BusinessScene = ({
+    activeNode,
+    setActiveNode
+}) => {
+    const nodes = {
+        clients: [0, 2.8, -0.4],
+        projects: [2.8, 0, 0.8],
+        tasks: [0, -2.8, 0.4],
+        invoices: [-2.8, 0, -0.8]
+    };
+
     return (
         <>
             <pointLight
@@ -304,65 +424,91 @@ const BusinessScene = () => {
 
             <Particles />
 
-            <Core />
+            <Core activeNode={activeNode} />
 
             <Node
-                position={[0, 2, 0]}
+                position={nodes.clients}
                 label="CLIENTS"
                 value="128 ACTIVE"
+                id="clients"
+                activeNode={activeNode}
+                setActiveNode={setActiveNode}
             />
 
             <Node
-                position={[2, 0, 0]}
+                position={nodes.projects}
                 label="PROJECTS"
                 value="24 ACTIVE"
+                id="projects"
+                activeNode={activeNode}
+                setActiveNode={setActiveNode}
             />
 
             <Node
-                position={[0, -2, 0]}
+                position={nodes.tasks}
                 label="TASKS"
                 value="87% COMPLETE"
+                id="tasks"
+                activeNode={activeNode}
+                setActiveNode={setActiveNode}
             />
 
             <Node
-                position={[-2, 0, 0]}
+                position={nodes.invoices}
                 label="INVOICES"
                 value="₹1.24L PENDING"
+                id="invoices"
+                activeNode={activeNode}
+                setActiveNode={setActiveNode}
             />
 
             <Connection
-                start={[0, 1.7, 0]}
-                end={[0, 1, 0]}
+                start={nodes.clients}
+                end={[0, 0, 0]}
+                active={activeNode === "clients"}
             />
 
             <Connection
-                start={[1.7, 0, 0]}
-                end={[1, 0, 0]}
+                start={nodes.projects}
+                end={[1.8, 0, 0]}
+                active={activeNode === "projects"}
             />
 
             <Connection
-                start={[0, -1.7, 0]}
-                end={[0, -1, 0]}
+                start={nodes.tasks}
+                end={[0, -1.8, 0]}
+                active={activeNode === "tasks"}
             />
 
             <Connection
-                start={[-1.7, 0, 0]}
-                end={[-1, 0, 0]}
+                start={nodes.invoices}
+                end={[-1.8, 0, 0]}
+                active={activeNode === "invoices"}
             />
         </>
     );
 };
 
 const BusinessCore = () => {
+    const [activeNode, setActiveNode] = useState(null);
+
     return (
-        <div className="h-[500px] w-full">
+        <div className="relative w-full h-[750px] overflow-visible">
             <Canvas
                 camera={{
-                    position: [0, 0, 6],
-                    fov: 45
+                    position: [0, 0, 7],
+                    fov: 55
+                }}
+                dpr={[1, 2]}
+                gl={{
+                    antialias: true,
+                    alpha: true
                 }}
             >
-                <BusinessScene />
+                <BusinessScene
+                    activeNode={activeNode}
+                    setActiveNode={setActiveNode}
+                />
 
                 <OrbitControls
                     enableZoom={false}
@@ -376,3 +522,4 @@ const BusinessCore = () => {
 };
 
 export default BusinessCore;
+
