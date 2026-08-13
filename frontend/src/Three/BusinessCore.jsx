@@ -16,123 +16,112 @@ const Core = ({ activeNode }) => {
         if (!coreRef.current) return;
 
         const time = state.clock.elapsedTime;
-        const intensity = activeNode ? 1.4 : 1;
+        const intensity = activeNode ? 1.35 : 1;
 
-        coreRef.current.rotation.x += delta * 0.12 * intensity;
-        coreRef.current.rotation.y += delta * 0.22 * intensity;
+        coreRef.current.rotation.x += delta * 0.10 * intensity;
+        coreRef.current.rotation.y += delta * 0.18 * intensity;
         coreRef.current.position.y = Math.sin(time * 1.2) * 0.08;
 
         if (innerRef.current) {
             const pulse =
                 1 +
-                Math.sin(time * (activeNode ? 5 : 3)) *
-                    (activeNode ? 0.08 : 0.04);
+                Math.sin(time * (activeNode ? 4.5 : 2.8)) *
+                (activeNode ? 0.07 : 0.035);
 
-            innerRef.current.scale.set(
-                pulse,
-                pulse,
-                pulse
-            );
+            innerRef.current.scale.setScalar(pulse);
         }
 
         if (ringRef.current) {
-            ringRef.current.rotation.x +=
-                delta * 0.35 * intensity;
-            ringRef.current.rotation.y +=
-                delta * 0.2 * intensity;
+            ringRef.current.rotation.x += delta * 0.28 * intensity;
+            ringRef.current.rotation.y += delta * 0.16 * intensity;
         }
 
         if (ringRef2.current) {
-            ringRef2.current.rotation.x -=
-                delta * 0.25 * intensity;
-            ringRef2.current.rotation.z +=
-                delta * 0.3 * intensity;
+            ringRef2.current.rotation.x -= delta * 0.20 * intensity;
+            ringRef2.current.rotation.z += delta * 0.24 * intensity;
         }
 
         if (ringRef3.current) {
-            ringRef3.current.rotation.y +=
-                delta * 0.5 * intensity;
-            ringRef3.current.rotation.z -=
-                delta * 0.2 * intensity;
+            ringRef3.current.rotation.y += delta * 0.38 * intensity;
+            ringRef3.current.rotation.z -= delta * 0.16 * intensity;
         }
 
         if (shardRef.current) {
-            shardRef.current.rotation.x +=
-                delta * 0.7 * intensity;
-            shardRef.current.rotation.y -=
-                delta * 0.45 * intensity;
+            shardRef.current.rotation.x += delta * 0.55 * intensity;
+            shardRef.current.rotation.y -= delta * 0.35 * intensity;
         }
     });
 
     return (
         <group ref={coreRef}>
+            {/* INNER ENERGY */}
             <mesh ref={innerRef}>
-            <sphereGeometry args={[0.95, 32, 32]} />
+                <sphereGeometry args={[1.0, 32, 32]} />
                 <meshBasicMaterial
                     color="#38bdf8"
                     transparent
-                    opacity={activeNode ? 0.35 : 0.22}
+                    opacity={activeNode ? 0.38 : 0.25}
                 />
             </mesh>
 
+            {/* INNER WIREFRAME */}
             <mesh>
-            <icosahedronGeometry args={[1.15, 2]} />
+                <icosahedronGeometry args={[1.3, 2]} />
                 <meshBasicMaterial
                     color="#7dd3fc"
                     wireframe
                     transparent
-                    opacity={0.45}
+                    opacity={0.38}
                 />
             </mesh>
 
+            {/* ENERGY BODY */}
             <mesh>
-                <icosahedronGeometry args={[1.35, 2]} />
+                <icosahedronGeometry args={[1.28, 2]} />
                 <meshStandardMaterial
                     color="#0ea5e9"
                     emissive="#0284c7"
-                    emissiveIntensity={
-                        activeNode ? 3 : 1.8
-                    }
+                    emissiveIntensity={activeNode ? 3.5 : 2}
                     transparent
-                    opacity={0.3}
+                    opacity={0.28}
                 />
             </mesh>
 
+            {/* OUTER WIREFRAME */}
             <mesh>
-                <icosahedronGeometry args={[1.25, 2]} />
+                <icosahedronGeometry args={[1.42, 2]} />
                 <meshBasicMaterial
                     color="#38bdf8"
                     wireframe
                     transparent
-                    opacity={0.7}
+                    opacity={0.65}
                 />
             </mesh>
 
+            {/* MAIN ORBIT */}
             <mesh ref={ringRef}>
-                <torusGeometry
-                    args={[2.1, 0.01, 12, 100]}
-                />
+                <torusGeometry args={[1.85, 0.018, 12, 100]} />
                 <meshBasicMaterial
                     color="#38bdf8"
                     transparent
-                    opacity={0.7}
+                    opacity={0.65}
                 />
             </mesh>
 
+            {/* SECOND ORBIT */}
             <mesh
                 ref={ringRef2}
                 rotation={[Math.PI / 2, 0, 0]}
             >
-                <torusGeometry
-                   args={[1.75, 0.025, 16, 100]}
-                />
+                <torusGeometry args={[2.05, 0.012, 12, 100]} />
                 <meshBasicMaterial
                     color="#7dd3fc"
                     transparent
-                    opacity={0.45}
+                    opacity={0.42}
                 />
             </mesh>
 
+            {/* THIRD ORBIT */}
             <mesh
                 ref={ringRef3}
                 rotation={[
@@ -141,34 +130,33 @@ const Core = ({ activeNode }) => {
                     0
                 ]}
             >
-                <torusGeometry
-                    args={[1.95, 0.015, 16, 100]}
-                />
+                <torusGeometry args={[2.2, 0.008, 12, 100]} />
                 <meshBasicMaterial
                     color="#0ea5e9"
                     transparent
-                    opacity={0.35}
+                    opacity={0.30}
                 />
             </mesh>
 
+            {/* FLOATING SHARDS */}
             <group ref={shardRef}>
-                <mesh position={[0, 1.45, 0]}>
+                <mesh position={[0, 1.65, 0]}>
+                    <octahedronGeometry args={[0.09, 0]} />
+                    <meshBasicMaterial color="#7dd3fc" />
+                </mesh>
+
+                <mesh position={[1.65, 0, 0]}>
+                    <octahedronGeometry args={[0.07, 0]} />
+                    <meshBasicMaterial color="#38bdf8" />
+                </mesh>
+
+                <mesh position={[0, -1.65, 0]}>
                     <octahedronGeometry args={[0.08, 0]} />
                     <meshBasicMaterial color="#7dd3fc" />
                 </mesh>
 
-                <mesh position={[1.45, 0, 0]}>
-                    <octahedronGeometry args={[0.06, 0]} />
-                    <meshBasicMaterial color="#38bdf8" />
-                </mesh>
-
-                <mesh position={[0, -1.45, 0]}>
+                <mesh position={[-1.65, 0, 0]}>
                     <octahedronGeometry args={[0.07, 0]} />
-                    <meshBasicMaterial color="#7dd3fc" />
-                </mesh>
-
-                <mesh position={[-1.45, 0, 0]}>
-                    <octahedronGeometry args={[0.06, 0]} />
                     <meshBasicMaterial color="#38bdf8" />
                 </mesh>
             </group>
@@ -193,7 +181,7 @@ const Node = ({
 
         const time = state.clock.elapsedTime;
         const isActive = activeNode === id;
-        const targetScale = isActive ? 1.45 : 1;
+        const targetScale = isActive ? 1.35 : 1;
 
         meshRef.current.scale.lerp(
             new THREE.Vector3(
