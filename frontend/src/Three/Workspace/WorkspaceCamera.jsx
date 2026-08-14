@@ -1,57 +1,65 @@
-import { useFrame, useThree } from "@react-three/fiber";
 import { useEffect, useRef } from "react";
+import { useThree, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import {
-    CAMERA_POSITIONS
-} from "./animation";
 
-const WorkspaceCamera = ({ state }) => {
+const WorkspaceCamera = () => {
     const { camera } = useThree();
-    const targetPosition = useRef(
-        new THREE.Vector3()
-    );
-    const targetLookAt = useRef(
-        new THREE.Vector3()
-    );
+
+    const targetRotation = useRef({
+        x: 0,
+        y: 0
+    });
+
+    const currentRotation = useRef({
+        x: 0,
+        y: 0
+    });
 
     useEffect(() => {
-        const config =
-            CAMERA_POSITIONS[state];
+        const handleMouseMove = (event) => {
+            const x = event.clientX / window.innerWidth;
+            const y = event.clientY / window.innerHeight;
 
-        if (!config) return;
+            // Horizontal look
+            targetRotation.current.y =
+                (x - 0.5) * 0.8;
 
-        targetPosition.current.set(
-            ...config.position
+            // Vertical look
+            targetRotation.current.x =
+                (y - 0.5) * 0.45;
+        };
+
+        window.addEventListener(
+            "mousemove",
+            handleMouseMove
         );
 
-        targetLookAt.current.set(
-            ...config.lookAt
-        );
-    }, [state]);
+        return () => {
+            window.removeEventListener(
+                "mousemove",
+                handleMouseMove
+            );
+        };
+    }, []);
 
     useFrame(() => {
-        camera.position.lerp(
-            targetPosition.current,
-            0.035
+        currentRotation.current.x = THREE.MathUtils.lerp(
+            currentRotation.current.x,
+            targetRotation.current.x,
+            0.08
         );
 
-        
-
-        const targetQuaternion =
-            new THREE.Quaternion();
-
-        targetQuaternion.setFromRotationMatrix(
-            new THREE.Matrix4().lookAt(
-                camera.position,
-                targetLookAt.current,
-                camera.up
-            )
+        currentRotation.current.y = THREE.MathUtils.lerp(
+            currentRotation.current.y,
+            targetRotation.current.y,
+            0.08
         );
 
-        camera.quaternion.slerp(
-            targetQuaternion,
-            0.035
-        );
+        camera.rotation.x =
+            currentRotation.current.x;
+
+        camera.rotation.y =
+            currentRotation.current.y;
     });
 
     return null;
