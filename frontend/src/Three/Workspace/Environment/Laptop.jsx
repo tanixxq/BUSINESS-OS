@@ -1,3 +1,7 @@
+import { useState } from "react";
+import DesktopContent from "./DesktopContent";
+import { Html } from "@react-three/drei";
+
 const DesktopComputer = () => {
     const keyRows = [
         {
@@ -126,28 +130,26 @@ const DesktopComputer = () => {
                 </mesh>
 
                 {/* Actual display */}
-                <mesh position={[0, 0, 0.088]}>
-                    <planeGeometry args={[2.36, 1.36]} />
-                    <meshStandardMaterial
-                        color="#172b3b"
-                        emissive="#173e55"
-                        emissiveIntensity={0.5}
-                        roughness={0.18}
-                        metalness={0.05}
-                    />
-                </mesh>
+                <Html
+    transform
+    position={[0, 0, 0.13]}
+    scale={0.085}
+    center
+>
+    <div
+        style={{
+            width: "1180px",
+            height: "710px",
+            background: "#f5f3ef",
+            overflow: "hidden"
+        }}
+    >
+        <DesktopContent />
+    </div>
+</Html>
 
                 {/* Subtle glass layer */}
-                <mesh position={[0, 0, 0.095]}>
-                    <planeGeometry args={[2.36, 1.36]} />
-                    <meshPhysicalMaterial
-                        color="#9bb7c2"
-                        transparent
-                        opacity={0.045}
-                        roughness={0.08}
-                        metalness={0.05}
-                    />
-                </mesh>
+                
 
                 {/* Webcam */}
                 <mesh position={[0, 0.705, 0.11]}>
